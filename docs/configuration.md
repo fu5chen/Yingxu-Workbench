@@ -6,26 +6,26 @@
 
 `confiykey.json` 的 `apiKeys` 字段：
 
-| 字段 | 模型 / 服务 | 当前适配器地址 |
-| --- | --- | --- |
-| `h3` | Hyaloria-H3 MAX | `https://asop.uk/api/hyaloria/v1` |
-| `krea2` | Hyaloria-文生图片 | `https://asop.uk/api/hyaloria/v1` |
-| `seedance25` | BytePlus 视频 | `https://ark.ap-southeast.bytepluses.com/api/v3` |
-| `seedream50Pro` | BytePlus 图片 | `https://ark.ap-southeast.bytepluses.com/api/v3` |
-| `chat` | 对话与提示词优化 | `https://api.paipu.net` |
-| `legacyVideo1` | 兼容视频接口一 | `https://api.paipu.net` |
-| `legacyVideo2` | 兼容视频接口二 | `https://modelflare.dev` |
-| `legacyImageVideo` | 兼容图片视频接口 | `https://settle.linkomobile.com` |
+| 字段 | 用途 |
+| --- | --- |
+| `h3` | Hyaloria-H3 MAX 视频生成 |
+| `krea2` | Hyaloria-文生图片 |
+| `seedance25` | senndance2.5 视频生成 |
+| `seedream50Pro` | Hyaloria-图像编辑 |
+| `chat` | 对话与提示词优化 |
+| `legacyVideo1` | 兼容视频接口一 |
+| `legacyVideo2` | 兼容视频接口二 |
+| `legacyImageVideo` | 兼容图片视频接口 |
 
-只填写要使用的模型；空字段会显示未配置。H3 和 Krea2 使用独立字段。适配器同时校验 Key 格式与上游响应；接口地址不同的中转平台不一定兼容。如需更换服务商，应检查 `lib/server.ts` 的接口契约、鉴权格式、模型名称和参考素材要求。
+只填写要使用的模型；空字段会显示未配置。图片与视频使用独立字段。Key 必须与实际接口匹配；修改接口配置时，检查 `lib/server.ts` 中的请求契约、鉴权格式、模型名称和参考素材要求。
 
 ## OSS 与参考素材
 
-`oss` 中填写自己的 `region`（例如 `oss-cn-hangzhou`）、`bucket`、`accessKeyId` 和 `accessKeySecret`。这些都是可选配置项，没有绑定原作者的阿里云账号。
+`oss` 中填写自己的 `region`（例如 `oss-cn-hangzhou`）、`bucket`、`accessKeyId` 和 `accessKeySecret`。这些都是可选配置项，没有绑定原作者的云账号。
 
 H3 的本地参考素材需要可供上游读取的 HTTPS 链接。私有 OSS 用于上传并签名，生成结果转存和缩略图加速也需要完整 OSS 配置。缺少配置时，相关功能会不可用；仅填模型 Key 不代表参考素材上传和结果加速都已接通。桶应保持私有，账号需具有所使用对象的读写权限。
 
-## 可选 BytePlus 素材库
+## 可选素材库
 
 `byteplusAssets` 用于需要素材入库的场景：
 
@@ -42,4 +42,4 @@ H3 的本地参考素材需要可供上游读取的 HTTPS 链接。私有 OSS �
 
 `STUDIO_LOCAL_ARCHIVE=false` 关闭 `opout/` 额外原件副本。`STUDIO_SUBMIT_RESERVE_MIB` 和 `STUDIO_MEDIA_RESERVE_MIB` 分别控制提交与媒体缓存所需剩余磁盘空间，单位 MiB。`start:local` 会把这些设置传给子进程；如果用系统服务分别启动组件，需给网关和后台进程配置相同环境变量。
 
-生产环境不提供“1000 个同时实际生成”的保证；本地队列和服务商并发额度是两层限制。不要直接提高并发来处理超时或磁盘不足。
+生产环境不提供“1000 个同时实际生成”的保证；本地队列和接口并发额度是两层限制。不要直接提高并发来处理超时或磁盘不足。
