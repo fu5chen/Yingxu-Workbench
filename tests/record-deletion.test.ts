@@ -1,0 +1,35 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { DatabaseSync } from "node:sqlite";
+import { readFileSync } from "node:fs";
+import { DELETE_RECORD_SQL, RESTORE_RECORD_SQL, recordKind } from "../lib/record-deletion.ts";
+
+test("delete is owner scoped, reversible, and survives a late provider status update", () => {
+  const db = new DatabaseSync(":memory:");
+  db.exec(readFileSync(new URL("../drizzle/0000_busy_speed_demon.sql", import.meta.url), "utf8"));
+  db.exec(readFileSync(new URL("../drizzle/0001_ambiguous_logan.sql", import.meta.url), "utf8"));
+  const insert = db.prepare("INSERT INTO jobs (id,owner,status,request,result,created,updated) VALUES (?,?,?,?,?,?,?)");
+  insert.run("image-id", "alice", "completed", '{"kind":"image"}', '{"url":"saved.png"}', 1, 1);
+  insert.run("video-id", "alice", "in_progress", '{}', '{}', 1, 1);
+  insert.run("chat-id", "alice", "completed", '{"kind":"chat"}', '{}', 1, 1);
+  const remove = db.prepare(DELETE_RECORD_SQL), restore = db.prepare(RESTORE_RECORD_SQL);
+  assert.equal(remove.run(10, "image-id", "bob", "image").changes, 0);
+  assert.equal(remove.run(10, "image-id", "alice", "video").changes, 0);
+  assert.equal(remove.run(10, "chat-id", "alice", "video").changes, 0);
+  assert.equal(remove.run(10, "image-id", "alice", "image").changes, 1);
+  assert.equal(remove.run(10, "video-id", "alice", "video").changes, 1);
+  db.prepare("UPDATE jobs SET status='completed',result=? WHERE id=?").run('{"url":"video.mp4"}', "video-id");
+  assert.equal(db.prepare("SELECT id FROM jobs WHERE id='video-id' AND deleted_at IS NULL").get(), undefined);
+  assert.equal(restore.run("video-id", "bob", "video").changes, 0);
+  assert.equal(restore.run("video-id", "alice", "video").changes, 1);
+  const row = db.prepare("SELECT * FROM jobs WHERE id='video-id'").get()!;
+  assert.equal(row.deleted_at, null);
+  assert.equal(row.status, "completed");
+  assert.equal(row.result, '{"url":"video.mp4"}');
+  assert.equal(restore.run("image-id", "alice", "image").changes, 1);
+  assert.equal(db.prepare("SELECT result FROM jobs WHERE id='image-id'").get()!.result, '{"url":"saved.png"}');
+  assert.equal(recordKind("images"), "image");
+  assert.equal(recordKind("jobs"), "video");
+  assert.throws(() => recordKind("chat"));
+  db.close();
+});

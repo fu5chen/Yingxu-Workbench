@@ -1,0 +1,34 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { signOssUrl } from "../lib/oss-storage.ts";
+import { describePortraitConfig } from "../lib/portrait-config.ts";
+const env = { OSS_REGION: "oss-cn-beijing", OSS_BUCKET: "test-bucket", OSS_ACCESS_KEY_ID: "test-ak", OSS_ACCESS_KEY_SECRET: "test-secret" };
+const now = new Date("2026-10-20T00:00:00Z");
+test("OSS V4 URLs bind regional storage, object path, method and content headers", () => {
+  const get = signOssUrl(env, "refs/图片 1.png", "GET", 604800, {}, now);
+  const url = new URL(get);
+  assert.equal(url.hostname, "test-bucket.oss-cn-beijing.aliyuncs.com");
+  assert.equal(decodeURIComponent(url.pathname), "/refs/图片 1.png");
+  assert.equal(url.searchParams.get("x-oss-expires"), "604800");
+  assert.equal(url.searchParams.get("x-oss-credential"), "test-ak/20261020/cn-beijing/oss/aliyun_v4_request");
+  assert.ok(!get.includes("test-secret"));
+  const signature = (method: "GET" | "PUT", headers = {}) => new URL(signOssUrl(env, "refs/image.png", method, 300, headers, now)).searchParams.get("x-oss-signature");
+  assert.notEqual(signature("GET"), signature("PUT"));
+  assert.notEqual(signature("PUT", {"content-type":"image/png"}), signature("PUT", {"content-type":"image/jpeg"}));
+  assert.notEqual(signature("PUT"), signature("PUT", {"x-oss-object-acl":"private"}));
+  assert.throws(() => signOssUrl(env, "../escape", "GET", 300));
+  assert.throws(() => signOssUrl(env, "image.png", "GET", 604801));
+  assert.throws(() => signOssUrl({...env, OSS_ACCESS_KEY_SECRET:undefined}, "image.png", "GET", 300));
+  const attachment=new URL(signOssUrl(env,"refs/image.png","GET",300,{},now,{"response-content-disposition":"attachment; filename=\"image.png\""}));
+  assert.equal(attachment.searchParams.get('response-content-disposition'),'attachment; filename="image.png"');
+  assert.notEqual(attachment.searchParams.get('x-oss-signature'),signature('GET'));
+  assert.throws(()=>signOssUrl(env,'refs/image.png','GET',300,{},now,{'x-oss-signature':'invalid'}));
+});
+test("complete OSS settings enable asset import without a TOS bucket", () => {
+  const base = {BYTEPLUS_ACCESS_KEY_ID:"ak", BYTEPLUS_SECRET_ACCESS_KEY:"sk", BYTEPLUS_ASSET_GROUP_ID:"group-example", BYTEPLUS_ASSET_PROJECT:"example-project"};
+  assert.equal(describePortraitConfig(base).uploadReady, false);
+  assert.equal(describePortraitConfig({...base,...env}).uploadReady, true);
+  assert.equal(describePortraitConfig({...base,...env}).storage, "oss");
+  assert.equal(describePortraitConfig({...base,...env,OSS_BUCKET:undefined}).uploadReady, false);
+  assert.equal(describePortraitConfig({...base,...env,BYTEPLUS_ASSET_PROJECT:""}).configured, false);
+});

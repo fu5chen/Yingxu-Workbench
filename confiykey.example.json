@@ -1,0 +1,25 @@
+{
+  "apiKeys": {
+    "seedance25": "",
+    "seedream50Pro": "",
+    "h3": "",
+    "krea2": "",
+    "chat": "",
+    "legacyVideo1": "",
+    "legacyVideo2": "",
+    "legacyImageVideo": ""
+  },
+  "byteplusAssets": {
+    "accessKeyId": "",
+    "secretAccessKey": "",
+    "project": "",
+    "groupId": "",
+    "tosBucket": ""
+  },
+  "oss": {
+    "region": "",
+    "bucket": "",
+    "accessKeyId": "",
+    "accessKeySecret": ""
+  }
+}

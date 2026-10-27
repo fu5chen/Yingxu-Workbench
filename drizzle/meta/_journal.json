@@ -1,0 +1,48 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1790132159185,
+      "tag": "0000_busy_speed_demon",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1792486879176,
+      "tag": "0001_ambiguous_logan",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1792489088285,
+      "tag": "0002_careful_brother_voodoo",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1792498517180,
+      "tag": "0003_video_duration_quota",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1792514697350,
+      "tag": "0004_background_generation_media_cache",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1792515269173,
+      "tag": "0005_media_cache_retries",
+      "breakpoints": true
+    }
+  ]
+}
